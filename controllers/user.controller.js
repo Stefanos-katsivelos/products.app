@@ -1,90 +1,98 @@
-const user = require('../models/user.model');
-const { findOneAndDelete } = require('./product.controller');
+const User = require('../models/user.model');
 
-exports.findAll = async(req, res) => {
-    console.log("Find All users");
+exports.findAll = async (req, res) => {
+    console.log("find all users products");
+
     try {
-        const result = await user.find();
-        res.status(200).json({data: result});
-    }catch (err) {
-        console.log(`Problem in reading users, ${err}`)
-    } 
+        const result = await User.find({}, { _id: 0, username: 1, products: 1 })
+        res.status(200).json({ date: result })
+        console.log("reading all users products")
+    } catch (err) {
+        res.status(400).json({ data: err })
+        console.log("Problem in reading users products");
+    }
+
 }
 
-exports.findOne = async(req, res) => {
-    console.log("Find One user")
+exports.findOne = async (req, res) => {
     const username = req.params.username;
+    console.log("Find products for user:", username);
+
     try {
-        const result = await user.findOne({username: username})
-        res.status(200).json({data: result})
-    }catch (err) {
-        console.log(`Problem in reading user, ${err}`)
+        const result = await User.findOne({ username: username }, { _id: 0, username: 1, products: 1 })
+        res.status(200).json({ data: result })
+        console.log("Success in finding products username")
+    } catch (err) {
+        res.status(400).json({ data: err });
+        console.log("Problem in finding products", username);
     }
 }
 
-exports.create = async(req, res) => {
-    console.log("Insert user");
-
-    console.log(req.body);
-
-    const newUser = new user({
-        username: req.body.username,
-        password: req.body.password,
-        name: req.body.name,
-        surname: req.body.surname,
-        email: req.body.email,
-        address: req.body.address,
-        phone: req.body.phone,
-        products: req.body.products
-    });
+exports.create = async (req, res) => {
+    const username = req.body.username;
+    const products = req.body.products;
+    console.log("Inserting products for user", username)
 
     try {
-        const result = await newUser.save()
-        res.status(200).json({data: result})
-        console.log("User saved")
-    }catch (err) {
-        res.status(400).json({data: err})
-        console.log("Problem in saving user");
-    }
-}
-
-exports.update = async(req, res) => {
-    const username = req.params.username;
-
-    console.log("Update user with username:", username)
-
-    const updateUser = {
-        name: req.body.name,
-        surname: req.body.surname,
-        email: req.body.email,
-        address: req.body.address,
-        phone: req.body.phone
-    }
-
-    try{
-        const result = await user.findOneAndUpdate(
-            {username: username},updateUser,
-            {new: true}
+        const result = await User.updateOne(
+            { username: username },
+            {
+                $push: {
+                    products: products
+                }
+            }
         )
-        res.status(200).json({data: result})
-        console.log("Success in updating user", username)
-    }catch (err) {
-        res.status(400).json({data: err})
-        console.log("Problem in updating user", username)
+        res.statu(200).json({ data: result });
+        console.log("Success insert")
+    } catch (err) {
+        res.status(400).json({ data: err });
+        console.log("Failed insert")
     }
 }
 
-exports.delete = async(req, res) => {
+exports.update = async (req, res) => {
     const username = req.params.username;
+    const _id = req.body.product._id;
+    const quantity = req.body.product.quantity;
 
-    console.log("Delete user: ", username)
+    console.log("Updating product from username", username)
 
     try {
-        const result = await user.findOneAndDelete({username: username})
-        res.status(200).json({data: result})
-        console.log("User success deleted", username)
-    }catch (err) {
-        res.json({data: err})
-        console.log("Problem in deleting");
+        const result = await User.updateOne(
+            { username: username, "products._id": _id },
+            {
+                $set: {
+                    "products.$.quantity": quantity
+                }
+            }
+        )
+        res.status(200).json({ data: result });
+        console.log("Success updating product", username)
+    } catch (err) {
+        res.status(400).json({ data: err });
+        console.log("Failed updating")
     }
+}
+
+exports.delete = async (req, res) => {
+    const username = req.params.username;
+    const _id = req.params.id;
+
+    console.log("Delete product");
+    try {
+        const result = await User.updateOne(
+            { username: username },
+            {
+                $pull: {
+                    products: { _id: _id }
+                }
+            }
+        )
+        res.status(200).json({ data: result });
+        console.log("Success in deleting product", username);
+    } catch (err) {
+        res.status(400).json({ data: err });
+        console.log("Failed to Deleting product", username)
+    }
+
 }

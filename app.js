@@ -5,13 +5,13 @@ const mongoose = require('mongoose');
 
 app.use(express.json());
 
-const swaggerUi =require('swagger-ui-express');
+const swaggerUi = require('swagger-ui-express');
 const swaggerDocument = require('./swagger');
 
 mongoose.connect(process.env.MONGODB_URI)
-    .then( 
-        () =>  {console.log("Connection to mongoDb established")},
-        err => { console.log("Failed to connect to mongodb", err)}
+    .then(
+        () => { console.log("Connection to mongoDb established") },
+        err => { console.log("Failed to connect to mongodb", err) }
     )
 
 const user = require('./routes/user.routes')
@@ -21,8 +21,8 @@ app.use('/api/users', user)
 app.use('/api/user-products', userProduct)
 
 app.use('/api-docs',
-        swaggerUi.serve,
-        swaggerUi.setup(swaggerDocument.options)
+    swaggerUi.serve,
+    swaggerUi.setup(swaggerDocument.options)
 )
 
 app.listen(port, () => {
